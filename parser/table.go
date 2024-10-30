@@ -153,10 +153,23 @@ func matchTableCellTokens(tokens []*tokenizer.Token) (int, bool) {
 	}
 
 	pipes := 0
+	escapePipe := false
+	var preToken *tokenizer.Token = nil
 	for _, token := range tokens {
-		if token.Type == tokenizer.Pipe {
+		if (token.Type == tokenizer.Pipe) && !escapePipe {
 			pipes++
+		} else if (token.Type == tokenizer.Pipe) && escapePipe {
+			token.Type = ""
+			token.Value = "|"
+			preToken.Type = ""
+			preToken.Value = ""
 		}
+		if token.Type == tokenizer.Backslash {
+			escapePipe = true
+		} else {
+			escapePipe = false
+		}
+		preToken = token
 	}
 	cells := tokenizer.Split(tokens, tokenizer.Pipe)
 	if len(cells) != pipes+1 {
